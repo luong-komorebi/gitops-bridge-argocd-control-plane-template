@@ -17,16 +17,16 @@ def compare_versions(current_version, latest_version, chart_name):
     # convert latest_version to string
     cmp_latest_version = f'{str(latest_version)}'
     if not cmp_latest_version.startswith('v'):
-        cmp_latest_version = 'v' + str(latest_version)
+        cmp_latest_version = f'v{str(latest_version)}'
     if latest_version and version.parse(cmp_latest_version) > version.parse(current_version):
         print(
             f"Newer version available for {chart_name}: {latest_version} (current: {current_version})")
         # if current_version starts with 'v' make sure that return value also start with a single 'v'
         if current_version.startswith('v') and not f'{str(latest_version)}'.startswith('v'):
-            return 'v' + str(latest_version)
+            return f'v{str(latest_version)}'
         return str(latest_version)
     else:
-      print(f"No newer version available for {chart_name} (current: {current_version})")
+        print(f"No newer version available for {chart_name} (current: {current_version})")
     return None
 
 
@@ -192,10 +192,7 @@ def check_newer_version_from_oci(provider_name, provider_registry, provider_vers
     # Find the latest version
     latest_version = max(versions)
 
-    update_version = compare_versions(
-        provider_version, latest_version, provider_name)
-
-    return update_version
+    return compare_versions(provider_version, latest_version, provider_name)
 
 
 directory_path = sys.argv[1]
@@ -229,7 +226,15 @@ for yaml_file in yaml_files:
     if addon_chart is not None:
         # make the following a switch statement
         if addon_chart_repository == "public.ecr.aws":
-            update_version(yaml_file, addon_chart_version,check_newer_version_from_oci(addon_chart, addon_chart_repository+"/"+addon_chart_repository_namespace+"/"+addon_chart, addon_chart_version))
+            update_version(
+                yaml_file,
+                addon_chart_version,
+                check_newer_version_from_oci(
+                    addon_chart,
+                    f"{addon_chart_repository}/{addon_chart_repository_namespace}/{addon_chart}",
+                    addon_chart_version,
+                ),
+            )
             continue
         update_version(yaml_file, addon_chart_version, check_newer_version(
             addon_chart_repository, addon_chart, addon_chart_version))
